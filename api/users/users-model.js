@@ -1,10 +1,11 @@
-const db = require('../../data/db-config.js');
+const db = require("../../data/db-config.js");
 
-function bul() {
+async function bul() {
+  return await db("users")
+    .leftJoin("roles", "users.role_id", "roles.role_id")
+    .select("users.user_id", "users.username", "roles.role_name");
+
   /**
-    2 tabloyu birleştirmeniz lazım (join)
-    Tüm kullanıcılar DİZİSİNİ çözümlemeli
-
     [
       {
         "user_id": 1,
@@ -20,11 +21,18 @@ function bul() {
    */
 }
 
-function goreBul(filtre) {
-  /**
-    2 tabloyu birleştirmeniz gerekiyor
-    Filtreyle eşleşen kullanıcıları içeren DİZİYİ çözümlemeli
+async function goreBul(filtre) {
+  return await db("users")
+    .leftJoin("roles", "users.role_id", "roles.role_id")
+    .select(
+      "users.user_id",
+      "users.username",
+      "users.password",
+      "roles.role_name"
+    )
+    .where(filtre);
 
+  /**
     [
       {
         "user_id": 1,
@@ -36,11 +44,26 @@ function goreBul(filtre) {
    */
 }
 
-function idyeGoreBul(user_id) {
-  /**
-    2 tabloyu birleştirmeniz gerekiyor
-    Verilen id li kullanıcıyı çözümlemeli
+async function idyeGoreBul(user_id) {
+  return await db("users")
+    .leftJoin("roles", "users.role_id", "roles.role_id")
+    .select("users.user_id", "users.username", "roles.role_name")
+    .where("users.user_id", user_id)
+    .first();
 
+  /**
+    {
+      "user_id": 2,
+      "username": "sue",
+      "role_name": "instructor"
+    }
+   */
+}
+
+async function roluBul(role_name) {
+  return await db("roles").where("role_name", role_name).first();
+
+  /**
     {
       "user_id": 2,
       "username": "sue",
@@ -67,21 +90,26 @@ function idyeGoreBul(user_id) {
     "role_name": "team lead"
   }
  */
-async function ekle({ username, password, role_name }) { // bu kısım hazır
-  let created_user_id
-  await db.transaction(async trx => {
-    let role_id_to_use
-    const [role] = await trx('roles').where('role_name', role_name)
+async function ekle({ username, password, role_name }) {
+  // bu kısım hazır
+  let created_user_id;
+  await db.transaction(async (trx) => {
+    let role_id_to_use;
+    const [role] = await trx("roles").where("role_name", role_name);
     if (role) {
-      role_id_to_use = role.role_id
+      role_id_to_use = role.role_id;
     } else {
-      const [role_id] = await trx('roles').insert({ role_name: role_name })
-      role_id_to_use = role_id
+      const [role_id] = await trx("roles").insert({ role_name: role_name });
+      role_id_to_use = role_id;
     }
-    const [user_id] = await trx('users').insert({ username, password, role_id: role_id_to_use })
-    created_user_id = user_id
-  })
-  return idyeGoreBul(created_user_id)
+    const [user_id] = await trx("users").insert({
+      username,
+      password,
+      role_id: role_id_to_use,
+    });
+    created_user_id = user_id;
+  });
+  return idyeGoreBul(created_user_id);
 }
 
 module.exports = {
@@ -89,4 +117,5 @@ module.exports = {
   bul,
   goreBul,
   idyeGoreBul,
+  roluBul,
 };
