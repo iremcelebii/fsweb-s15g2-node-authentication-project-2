@@ -84,24 +84,14 @@ const sinirli = (req, res, next) => {
   } else {
     res.status(401).json({ message: "Token gereklidir" });
   }
-  /*
-    Eğer Authorization header'ında bir token sağlanmamışsa:
-    status: 401
-    {
-      "message": "Token gereklidir"
-    }
-
-    Eğer token doğrulanamıyorsa:
-    status: 401
-    {
-      "message": "Token gecersizdir"
-    }
-
-    Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
-  */
 };
-//!login olduktan sonraki end pointler için
+//!login olduktan sonraki end pointler için- rolü kontrol ediyoruz:
 const sadece = (role_name) => (req, res, next) => {
+  if (req.decodedJWT && req.decodedJWT.role_name == role_name) {
+    next();
+  } else {
+    res.status(403).json({ message: "Bu, senin için değil" });
+  }
   /*
     
 	Kullanıcı, Authorization headerında, kendi payloadu içinde bu fonksiyona bağımsız değişken olarak iletilen 
@@ -149,4 +139,20 @@ module.exports = {
     {
       "message": "Geçersiz kriter"
     }
+  */
+
+/*sinirli
+    Eğer Authorization header'ında bir token sağlanmamışsa:
+    status: 401
+    {
+      "message": "Token gereklidir"
+    }
+
+    Eğer token doğrulanamıyorsa:
+    status: 401
+    {
+      "message": "Token gecersizdir"
+    }
+
+    Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
   */
