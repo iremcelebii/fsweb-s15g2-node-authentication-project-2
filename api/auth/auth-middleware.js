@@ -1,7 +1,7 @@
 const { JWT_SECRET } = require("../secrets"); // bu secreti kullanın!
 const userModel = require("../users/users-model");
 const bcryptjs = require("bcryptjs");
-
+const jwt = require("jsonwebtoken");
 //!register için
 const rolAdiGecerlimi = async (req, res, next) => {
   try {
@@ -28,7 +28,7 @@ const rolAdiGecerlimi = async (req, res, next) => {
     next(err);
   }
 };
-
+//!register için
 async function usernameBostami(req, res, next) {
   try {
     const user = await userModel.nameeGoreBul(req.body.username);
@@ -68,8 +68,22 @@ async function sifreDogruMu(req, res, next) {
     next(err);
   }
 }
-
+//!login olduktan sonraki end pointler için
 const sinirli = (req, res, next) => {
+  const token = req.headers.authorization;
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, decodedJWT) => {
+      if (err) {
+        res.status(401).json({ message: "Token gecersizdir" });
+      } else {
+        req.decodedJWT = decodedJWT;
+        console.log(req.decodedJWT);
+        next();
+      }
+    });
+  } else {
+    res.status(401).json({ message: "Token gereklidir" });
+  }
   /*
     Eğer Authorization header'ında bir token sağlanmamışsa:
     status: 401
@@ -86,7 +100,7 @@ const sinirli = (req, res, next) => {
     Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
   */
 };
-
+//!login olduktan sonraki end pointler için
 const sadece = (role_name) => (req, res, next) => {
   /*
     
