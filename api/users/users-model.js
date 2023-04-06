@@ -60,6 +60,14 @@ async function idyeGoreBul(user_id) {
    */
 }
 
+async function nameeGoreBul(username) {
+  return await db("users")
+    .leftJoin("roles", "users.role_id", "roles.role_id")
+    .select("users.user_id", "users.username", "roles.role_name")
+    .where("users.username", username)
+    .first();
+}
+
 async function roluBul(role_name) {
   return await db("roles").where("role_name", role_name).first();
 
@@ -70,6 +78,14 @@ async function roluBul(role_name) {
       "role_name": "instructor"
     }
    */
+}
+async function nameeGoreSıfreBul(username) {
+  const user = await db("users")
+    .select("username", "password")
+    .where("username", username)
+    .first();
+
+  return user;
 }
 
 /**
@@ -118,4 +134,6 @@ module.exports = {
   goreBul,
   idyeGoreBul,
   roluBul,
+  nameeGoreBul,
+  nameeGoreSıfreBul,
 };
